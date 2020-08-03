@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ nginx_ingress_ctl_name }}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+spec:
+  externalTrafficPolicy: {{ nginx_ingress_ctl_lb_config['external_traffic_policy'] | default('Local') }}
+  type: LoadBalancer
+  loadBalancerIP: {{ nginx_ingress_ctl_ip_addr }}
+  ports:
+{% if nginx_ingress_ctl_lb_config['ports'] is defined and nginx_ingress_ctl_lb_config['ports'] != "" %}
+{% for item in nginx_ingress_ctl_lb_config['ports'] %}
+    - port: {{ item.port }}
+      targetPort: {{ item.target_port }}
+      protocol: {{ item.protocol }}
+      name: {{ item.name }}  
+{% endfor %}
+{% else %}
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https
+{% endif%}
+  selector:
+    app: {{ nginx_ingress_ctl_name }}
+

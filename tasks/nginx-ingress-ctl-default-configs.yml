@@ -1,0 +1,48 @@
+---
+
+- name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply System Configs
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) | from_yaml }}"
+    state: present
+    validate:
+      fail_on_error: yes
+  register: system_cofigs_output
+  with_items: "{{ nginx_ingress_ctl_system_configs }}"
+  when: nginx_ingress_ctl_system_configs is defined and nginx_ingress_ctl_system_configs != ""
+
+- name: DEBUG
+  debug:
+    var: system_cofigs_output.results[{{ item }}].result
+  with_sequence: start=0 end={{ nginx_ingress_ctl_system_configs | length - 1}}
+  when: nginx_ingress_ctl_system_configs is defined and nginx_ingress_ctl_system_configs != ""
+
+- name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply Common Configs
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) }}"
+    state: present
+#        validate:
+#          fail_on_error: yes
+  with_items: "{{ nginx_ingress_ctl_common_configs }}"
+  when: nginx_ingress_ctl_common_configs is defined and nginx_ingress_ctl_common_configs != ""
+
+- name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply Secrets
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) }}"
+    state: present
+    validate:
+      fail_on_error: yes
+  no_log: true
+  with_items: "{{ nginx_ingress_ctl_secrets }}"
+  when: nginx_ingress_ctl_secrets is defined and nginx_ingress_ctl_secrets != ""

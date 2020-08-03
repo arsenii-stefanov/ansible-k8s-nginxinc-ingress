@@ -1,0 +1,18 @@
+---
+
+- name: KUBE NGINX INGRESS CONTROLLER PRE TASKS | Import Kube CA
+  copy:
+    content: "{{ kube_ca_base | b64decode }}"
+    dest: "{{ kube_ca_path }}"
+  when: kube_ca_path is defined and kube_ca_path != ""
+
+- name: KUBE NGINX INGRESS CONTROLLER PRE TASKS | Ensure That the Namespace Exists 
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    kind: Namespace
+    api_version: v1
+    name: "{{ nginx_ingress_ctl_kube_namespace }}"
+    state: present

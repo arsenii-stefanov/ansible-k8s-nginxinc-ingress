@@ -1,0 +1,75 @@
+{% if nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally == true %}
+kind: ClusterRole
+{% else %}
+kind: Role
+{% endif %}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ nginx_ingress_ctl_name }}
+{% if ( nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally != true ) or ( nginx_ingress_ctl_deploy_globally is not defined ) %}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+{% endif %}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - list
+  - watch
+  - get
+- apiGroups:
+  - "extensions"
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+- apiGroups:
+  - k8s.nginx.org
+  resources:
+  - virtualservers
+  - virtualserverroutes
+  verbs:
+  - list
+  - watch
+  - get

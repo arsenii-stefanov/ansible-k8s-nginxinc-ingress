@@ -1,0 +1,68 @@
+---
+
+- name: KUBE NGINX INGRESS CONTROLLER TASK | Apply Service Configs
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) }}"
+    state: present
+    validate:
+      fail_on_error: yes
+  register: service_output
+  with_items: "{{ nginx_ingress_ctl_service_configs }}"
+  when: nginx_ingress_ctl_service_configs is defined and nginx_ingress_ctl_service_configs != ""
+
+- name: DEBUG
+  debug:
+    var: service_output.results[{{ item }}].result
+  with_sequence: start=0 end={{ nginx_ingress_ctl_service_configs | length - 1}}
+  when: nginx_ingress_ctl_service_configs is defined and nginx_ingress_ctl_service_configs != ""
+
+- name: KUBE NGINX INGRESS CONTROLLER TASK | Get a List of All Services
+  k8s_info:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    kind: Pod
+    label_selectors:
+      - app = {{ nginx_ingress_ctl_name }}
+    namespace: "{{ nginx_ingress_ctl_kube_namespace }}"
+  register: service_list
+  when: nginx_ingress_ctl_service_configs is defined and nginx_ingress_ctl_service_configs != ""
+
+- debug:
+    var: service_list.resources
+  when: service_list is defined
+
+- name: KUBE NGINX INGRESS CONTROLLER TASK | Apply Deployment Configs
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) }}"
+    state: present
+    validate:
+      fail_on_error: yes
+  with_items: "{{ nginx_ingress_ctl_deployment_configs }}"
+  when: nginx_ingress_ctl_deployment_configs is defined and nginx_ingress_ctl_deployment_configs != ""
+
+- name: KUBE NGINX INGRESS CONTROLLER TASK | Get a List of All Pods
+  k8s_info:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    kind: Pod
+    label_selectors:
+      - app = {{ nginx_ingress_ctl_name }}
+    namespace: "{{ nginx_ingress_ctl_kube_namespace }}"
+  register: pod_list
+  when: nginx_ingress_ctl_deployment_configs is defined and nginx_ingress_ctl_deployment_configs != ""
+
+- debug:
+    var: pod_list.resources
+  when: pod_list is defined
