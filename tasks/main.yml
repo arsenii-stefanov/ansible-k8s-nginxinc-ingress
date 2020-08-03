@@ -1,23 +1,23 @@
 ---
 
-# - name: Include Pre Tasks
-#   include_tasks: "pre-tasks.yml"
-#   tags: [always]
+- name: Include Pre Tasks
+  include_tasks: "pre-tasks.yml"
+  tags: [always]
 
-# - name: Include Default Configuration Task
-#   include_tasks: "nginx-ingress-ctl-default-configs.yml"
-#   tags: [always]
+- name: Include Default Configuration Task
+  include_tasks: "nginx-ingress-ctl-default-configs.yml"
+  tags: [always]
 
-# - name: Include IP Address Task [GCP]
-#   include_tasks: "reserve-ip-addr-gcp.yml"
-#   when:
-#     - nginx_ingress_ctl_ip_addr_config is defined and nginx_ingress_ctl_ip_addr_config != ""
-#     - nginx_ingress_ctl_ip_addr_config['provider'] is defined and nginx_ingress_ctl_ip_addr_config['provider'] == 'gcp'
-#   tags: [always]
+- name: Include IP Address Task [GCP]
+  include_tasks: "reserve-ip-addr-gcp.yml"
+  when:
+    - nginx_ingress_ctl_ip_addr_config is defined and nginx_ingress_ctl_ip_addr_config != ""
+    - nginx_ingress_ctl_ip_addr_config['provider'] is defined and nginx_ingress_ctl_ip_addr_config['provider'] == 'gcp'
+  tags: [always]
 
-# - name: Include Controller Task
-#   include_tasks: "nginx-ingress-ctl-controller.yml"
-#   tags: [always]
+- name: Include Controller Task
+  include_tasks: "nginx-ingress-ctl-controller.yml"
+  tags: [always]
 
 - name: Include Ingress Virtual Hosts Task
   include_tasks: "nginx-ingress-ctl-ingress.yml"
