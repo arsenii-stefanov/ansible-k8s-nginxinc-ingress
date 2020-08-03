@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-{{ nginx_ingress_ctl_name }}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+spec:
+  maxReplicas: {{ nginx_ingress_ctl_hpa_config['max_replicas'] }}
+  minReplicas: {{ nginx_ingress_ctl_hpa_config['min_replicas'] }}
+  scaleTargetRef:
+    apiVersion: extensions/v1beta2
+    kind: Deployment
+    name: {{ nginx_ingress_ctl_name }}
+  targetCPUUtilizationPercentage: {{ nginx_ingress_ctl_hpa_config['target_cpu_utilization_percentage'] }}

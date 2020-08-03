@@ -1,0 +1,103 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ nginx_ingress_ctl_name }}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ nginx_ingress_ctl_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ nginx_ingress_ctl_name }}
+      annotations:
+       prometheus.io/scrape: "true"
+       prometheus.io/port: "9113"
+    spec:
+      serviceAccountName: {{ nginx_ingress_ctl_service_account }}
+      containers:
+      - image: {{ nginx_ingress_ctl_image }}
+        imagePullPolicy: Always
+        name: {{ nginx_ingress_ctl_container_name | default('nginx') }}
+        ports:
+{% if nginx_ingress_ctl_lb_config['ports'] is defined and nginx_ingress_ctl_lb_config['ports'] != "" %}
+{% for item in nginx_ingress_ctl_lb_config['ports'] %}
+        - name: {{ item.name }}
+          containerPort: {{ item.port }}            
+{% endfor %}
+{% else %}
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+{% endif%}
+{% if nginx_ingress_ctl_prometheus_exporter_enabled is defined and nginx_ingress_ctl_prometheus_exporter_enabled == true %}
+        - name: prometheus
+          containerPort: {{ nginx_ingress_ctl_prometheus_exporter_port | default(9113) }}
+{% endif %}
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+{% if nginx_ingress_ctl_basic_auth_enabled is defined and nginx_ingress_ctl_basic_auth_enabled == true %}
+        volumeMounts:
+          - name: {{ nginx_ingress_ctl_basic_auth_secret_name }}
+            mountPath: /etc/nginx/htpasswd
+            subPath: htpasswd
+            readOnly: true
+{% endif %}
+        # https://docs.nginx.com/nginx-ingress-controller/configuration/global-configuration/command-line-arguments/
+        args:
+          - -nginx-configmaps=$(POD_NAMESPACE)/{{ nginx_ingress_ctl_configmap_name | default('nginx-config') }}
+          - -default-server-tls-secret=$(POD_NAMESPACE)/{{ nginx_ingress_ctl_default_ssl_name | default('nginx-default-server-ssl') }}
+{% if nginx_ingress_ctl_wildcard_ssl_name is defined and nginx_ingress_ctl_wildcard_ssl_name != "" %}
+          -wildcard-tls-secret={{ nginx_ingress_ctl_wildcard_ssl_name }}
+{% endif %}          
+          - -ingress-class={{ nginx_ingress_ctl_ingress_class }}
+          - ready-status
+          - -ready-status-port={{ nginx_ingress_ctl_ready_status_port | default(8081) }}
+{% if ( nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally != true ) or ( nginx_ingress_ctl_deploy_globally is not defined ) %}
+          - -watch-namespace={{ nginx_ingress_ctl_kube_namespace }}
+{% endif %}
+{% if nginx_ingress_ctl_log_level is defined and nginx_ingress_ctl_log_level != "" %}
+          - -v={{ nginx_ingress_ctl_log_level }}
+{% endif %}
+{% if nginx_ingress_ctl_prometheus_exporter_enabled is defined and nginx_ingress_ctl_prometheus_exporter_enabled == true %}
+          - -enable-prometheus-metrics
+          - -prometheus-metrics-listen-port={{ nginx_ingress_ctl_prometheus_exporter_port | default(9113) }}
+{% endif %}
+{% if nginx_ingress_ctl_enable_snippets is defined and nginx_ingress_ctl_enable_snippets == true %}
+          - -enable-snippets
+{% endif %}
+        resources:
+          requests:
+            memory: "{{ nginx_ingress_ctl_resources['requests']['ram'] | default('32M') }}"
+            cpu: "{{ nginx_ingress_ctl_resources['requests']['cpu'] | default('100m') }}"
+{% if nginx_ingress_ctl_resources['limits'] is defined and nginx_ingress_ctl_resources['limits'] != "" %}
+          limits:
+            memory: "{{ nginx_ingress_ctl_resources['limits']['ram'] }}"
+            cpu: "{{ nginx_ingress_ctl_resources['limits']['cpu'] }}"
+{% endif %}
+      # [START volumes]
+{% if nginx_ingress_ctl_basic_auth_enabled is defined and nginx_ingress_ctl_basic_auth_enabled == true %}
+      volumes:
+        - name: {{ nginx_ingress_ctl_basic_auth_secret_name }}
+          secret:
+            secretName: {{ nginx_ingress_ctl_basic_auth_secret_name }}
+            items:
+            - key: auth
+              path: htpasswd
+{% endif %}
+      # [END volumes]
+{% if nginx_ingress_ctl_gke_node_pool is defined and nginx_ingress_ctl_gke_node_pool != "" %}
+      nodeSelector:
+        #<labelname>:value
+        cloud.google.com/gke-nodepool: {{ nginx_ingress_ctl_gke_node_pool }}
+{% endif %}

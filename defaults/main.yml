@@ -1,0 +1,103 @@
+---
+
+nginx_ingress_ctl_deploy_globally: false
+nginx_ingress_ctl_kube_namespace: "nginx-ingress"
+nginx_ingress_ctl_name: "nginx-ingress"
+nginx_ingress_ctl_version: "1.8.0"
+
+kube_api_url: "https://k8s.example.com"
+kube_auth_api_key: "{{ kube_secrets_api_key }}"
+kube_ca_base: ""
+kube_ca_path: "" # Example - kube_ca_path: "{{ playbook_dir}}/kube_ca.pem"
+
+# K8s manifests
+nginx_ingress_ctl_k8s_manifests_dir: templates/nginxinc_ingress_controller
+
+nginx_ingress_ctl_system_configs:
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_ServiceAccount.yml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_RBAC_Role.yml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_RBAC_RoleBinding.yml"
+
+nginx_ingress_ctl_common_configs:
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_CustomResourceDefinition.yml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_ConfigMap.yml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_Secret_default-server-tls.yml"
+
+nginx_ingress_ctl_deployment_configs:
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_Deployment.yml"
+
+nginx_ingress_ctl_service_configs:
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_Service_LoadBalancer.yml"
+
+nginx_ingress_ctl_ingress_vhost_configs: []
+### Example
+### nginx_ingress_ctl_ingress_vhost_configs:
+### - "{{ playbook_dir }}/config-templates/k8s/nginxinc_ingress/nginxinc_Service_NodePort.yml"
+### - "{{ playbook_dir }}/config-templates/k8s/nginxinc_ingress/nginxinc_Ingress.yml"
+
+nginx_ingress_ctl_hpa: "{{ nginx_ingress_ctl_k8s_manifests_dir }}/horizontal-pod-autoscaler.yml"
+
+
+# Horizontal Pod Autoscaler
+nginx_ingress_ctl_hpa_config:
+  min_replicas: 1
+  max_replicas: 4
+  target_cpu_utilization_percentage: 40
+
+# Deployment config
+nginx_ingress_ctl_service_account: "{{ nginx_ingress_ctl_name }}-service-account"
+nginx_ingress_ctl_image: "nginx/nginx-ingress:{{ nginx_ingress_ctl_version }}"
+nginx_ingress_ctl_ingress_class: "{{ nginx_ingress_ctl_name }}"
+
+nginx_ingress_ctl_resources:
+  requests:
+    cpu: "500m"
+    ram: "128M"
+
+nginx_ingress_ctl_gke_node_pool: ""
+
+# Global ConfigMap
+nginx_ingress_ctl_global_log_format: "$time_local \t $remote_addr \t $realip_remote_addr \t $http_user_agent \t $request_body"
+nginx_ingress_ctl_global_real_ip_header: "X-Forwarded-For"
+nginx_ingress_ctl_global_real_ip_recursive: "True"
+nginx_ingress_ctl_global_set_real_ip_from: "10.0.0.0/8,172.16.0.0/12"
+# Extra global config options can be added as in dictionary format
+nginx_ingress_ctl_global_extra_conf: ""
+### Example:
+### nginx_ingress_ctl_global_extra_conf:
+###   keepalive-timeout: "65s"
+###   client-max-body-size: "2m"
+###   proxy-connect-timeout: "10s"
+###   proxy-read-timeout: "10s"
+
+# Load Balancer ports and traffic policy can be overriden here
+nginx_ingress_ctl_lb_config: ""
+### Example:
+### nginx_ingress_ctl_lb_config:
+###   external_traffic_policy: Local
+###   ports:
+###     - port: 80
+###       target_port: 80
+###       protocol: TCP
+###       name: http
+###     - port: 443
+###       targetPort: 443
+###       protocol: TCP
+###       name: https
+
+# Create an IP address
+nginx_ingress_ctl_ip_addr_config:
+### Example
+### nginx_ingress_ctl_ip_addr_config:
+###   provider: "gcp"
+###   name: "nginx-ingress-ctl-{{ nginx_ingress_ctl_name }}"
+###   project: "my-project-id"
+###   region: "us-central1"
+
+
+# Enable Prometheus exporter and endpoint
+nginx_ingress_ctl_prometheus_exporter_enabled: true
+
+# Enable NGINX basic auth
+nginx_ingress_ctl_basic_auth_enabled: false
+nginx_ingress_ctl_basic_auth_secret_name: "{{ nginx_ingress_ctl_name }}-basic-auth-secret"

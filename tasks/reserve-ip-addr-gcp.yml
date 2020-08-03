@@ -1,0 +1,30 @@
+---
+
+- name: KUBE NGINX INGRESS CONTROLLER IP TASK | Check If the IP Address Exists
+  gcp_compute_address_info:
+    region: "{{ nginx_ingress_ctl_ip_addr_config['region'] }}"
+    filters:
+    - name = {{ nginx_ingress_ctl_ip_addr_config['name'] }}
+    project: "{{ nginx_ingress_ctl_ip_addr_config['project'] }}"
+    auth_kind: "{{ nginx_ingress_ctl_ip_addr_config['auth_kind'] | default('application') }}"
+  register: gcp_compute_addr_details
+
+- set_fact:
+    nginx_ingress_ctl_ip_addr: "{{ gcp_compute_addr_details.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
+
+- name: KUBE NGINX INGRESS CONTROLLER IP TASK | Create an IP for the LoadBalancer
+  gcp_compute_address:
+    name: "{{ nginx_ingress_ctl_ip_addr_config['name'] }}"
+    region: "{{ nginx_ingress_ctl_ip_addr_config['region'] }}"
+    project: "{{ nginx_ingress_ctl_ip_addr_config['project'] }}"
+    auth_kind: "{{ nginx_ingress_ctl_ip_addr_config['auth_kind'] | default('application') }}"
+    state: present
+  register: ip_addr_created
+  when: nginx_ingress_ctl_ip_addr == ""
+
+- set_fact:
+    nginx_ingress_ctl_ip_addr: "{{ gcp_compute_addr_details.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
+  when: ip_addr_created.changed == true
+
+- debug:
+    msg: "The LoadBalancer IP is - {{ nginx_ingress_ctl_ip_addr }}"

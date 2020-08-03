@@ -1,0 +1,13 @@
+---
+
+- name: KUBE NGINX INGRESS CONTROLLER INGRESS TASK | Apply Ingress Virtual Host Configs
+  k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path }}"
+    validate_certs: false
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) }}"
+    state: present
+    validate:
+      fail_on_error: yes
+  with_items: "{{ nginx_ingress_ctl_ingress_vhost_configs }}"

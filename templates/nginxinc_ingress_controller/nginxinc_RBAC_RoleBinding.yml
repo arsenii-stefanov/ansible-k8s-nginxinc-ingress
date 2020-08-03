@@ -1,0 +1,23 @@
+{% if nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally == true %}
+kind: ClusterRoleBinding
+{% else %}
+kind: RoleBinding
+{% endif %}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ nginx_ingress_ctl_name }}
+{% if ( nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally != true ) or ( nginx_ingress_ctl_deploy_globally is not defined ) %}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+{% endif %}
+subjects:
+- kind: ServiceAccount
+  name: {{ nginx_ingress_ctl_service_account }}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+roleRef:
+{% if nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally == true %}
+  kind: ClusterRole
+{% else %}
+  kind: Role
+{% endif %}
+  name: {{ nginx_ingress_ctl_name }}
+  apiGroup: rbac.authorization.k8s.io
