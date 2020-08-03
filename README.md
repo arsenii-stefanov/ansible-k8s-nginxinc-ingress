@@ -1,4 +1,4 @@
-kAnsible K8s Nginx.inc Ingress
+Ansible K8s Nginx.inc Ingress
 =========
 
 References:
