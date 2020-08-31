@@ -1,0 +1,69 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ nginx_ingress_vhost_config['name'] }}
+  namespace: {{ nginx_ingress_ctl_kube_namespace }}
+  annotations:
+# START NGINX OPTIONS
+### https://github.com/nginxinc/kubernetes-ingress/blob/master/docs/configmap-and-annotations.md
+    kubernetes.io/ingress.class: "{{ nginx_ingress_ctl_ingress_class }}"
+    ingress.kubernetes.io/ssl-redirect: "{{ nginx_ingress_vhost_config['http_to_https_redirect'] }}"
+    nginx.org/proxy-buffers: "{{ nginx_ingress_vhost_config['nginx_opts']['proxy_buffers'] }}"
+    nginx.org/proxy-buffer-size: "{{ nginx_ingress_vhost_config['nginx_opts']['proxy_buffer_size'] }}"
+    nginx.org/proxy-read-timeout: "{{ nginx_ingress_vhost_config['nginx_opts']['proxy_read_timeout'] }}"
+    nginx.org/proxy-send-timeout: "{{ nginx_ingress_vhost_config['nginx_opts']['proxy_send_timeout'] }}"
+    nginx.org/client-max-body-size: "{{ nginx_ingress_vhost_config['nginx_opts']['client_max_body_size'] }}"
+# Add proxy headers to all locations
+    nginx.org/location-snippets: |
+      proxy_set_header source-ip $remote_addr;
+      proxy_set_header X-Origin  $http_origin;
+      proxy_set_header X-Referer $http_referer;
+{% if nginx_ingress_ctl_basic_auth_enabled is defined and nginx_ingress_ctl_basic_auth_enabled == true %}
+    nginx.org/location-snippets: |
+      auth_basic "Restricted";
+      auth_basic_user_file "/etc/nginx/htpasswd";
+{% endif %}
+# Restrics access to application metrics and set up URL redirect
+    nginx.org/server-snippets: |
+      location /metrics {
+          allow 127.0.0.1;
+          deny all;
+      }
+{% if nginx_ingress_vhost_config['redirect_rules'] is defined %}
+{% for item in nginx_ingress_vhost_config['redirect_rules'] %}
+      if ($http_host = {{ item['source_http_host'] }}) {
+        return {{ item['type'] }} {{ item['dest_url'] }};
+      }
+{% endfor %}
+{% endif %}
+{% if nginx_ingress_vhost_config['ip_allow'] is defined and nginx_ingress_vhost_config['ip_allow'] != "" %}
+      satisfy any;
+{% for item in nginx_ingress_vhost_config['ip_allow'] %}
+      allow {{ item['ip'] }}; # {{ item['comment'] }}
+{% endfor %}
+      deny all;
+{% endif %}
+# END NGINX OPTIONS
+spec:
+{% if ( nginx_ingress_https_enabled is defined and nginx_ingress_https_enabled == true ) or ( nginx_ingress_vhost_config['http_to_https_redirect'] is defined and nginx_ingress_vhost_config['http_to_https_redirect'] == true ) %}
+  tls:
+{% for item in nginx_ingress_vhost_config['vhosts'] %}
+{% if item['kube_tls_secret_name'] is defined %}
+  - hosts:
+    - {{ item['v_host_name'] }}
+    secretName: {{ item['kube_tls_secret_name'] }}
+{% endif %}
+{% endfor %}
+{% endif %}
+  rules:
+{% for item in nginx_ingress_vhost_config['vhosts'] %}
+  - host: {{ item['v_host_name'] }}
+    http:
+      paths:
+{% for paths_item in item['paths'] %}
+      - path: {{ paths_item['path'] }}
+        backend:
+          serviceName: {{ paths_item['service_name'] }}
+          servicePort: {{ paths_item['service_port'] }}
+{% endfor %}
+{% endfor %}
