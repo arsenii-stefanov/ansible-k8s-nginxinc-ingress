@@ -1,8 +1,13 @@
+### REFERENCE: https://github.com/nginxinc/kubernetes-ingress/blob/master/deployments/service/loadbalancer.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ nginx_ingress_ctl_name }}
   namespace: {{ nginx_ingress_ctl_kube_namespace }}
+{% if nginx_ingress_ctl_type is defined and nginx_ingress_ctl_type == "internal" %}
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+{% endif %}
 spec:
   externalTrafficPolicy: {{ nginx_ingress_ctl_lb_config['external_traffic_policy'] | default('Local') }}
   type: LoadBalancer

@@ -7,10 +7,10 @@
   when: kube_ca_path is defined and kube_ca_path != ""
 
 - name: KUBE NGINX INGRESS CONTROLLER PRE TASKS | Ensure That the Namespace Exists 
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     kind: Namespace
     api_version: v1
