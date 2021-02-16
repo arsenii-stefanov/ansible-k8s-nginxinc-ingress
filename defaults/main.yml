@@ -18,8 +18,19 @@ nginx_ingress_ctl_system_configs:
 - "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_RBAC_Role.yml"
 - "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_RBAC_RoleBinding.yml"
 
+nginx_ingress_ctl_enable_custom_resources: true
+
+nginx_ingress_ctl_custom_resource_definitions:
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/appprotect.f5.com_aplogconfs.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/appprotect.f5.com_appolicies.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/appprotect.f5.com_apusersigs.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/k8s.nginx.org_globalconfigurations.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/k8s.nginx.org_policies.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/k8s.nginx.org_transportservers.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/k8s.nginx.org_virtualserverroutes.yaml"
+- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/crd/k8s.nginx.org_virtualservers.yaml"
+
 nginx_ingress_ctl_common_configs:
-- "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_CustomResourceDefinition.yml"
 - "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_ConfigMap.yml"
 - "{{ nginx_ingress_ctl_k8s_manifests_dir }}/nginxinc_Secret_default-server-tls.yml"
 
@@ -45,7 +56,7 @@ nginx_ingress_ctl_hpa_config:
   target_cpu_utilization_percentage: 40
 
 # Deployment config
-nginx_ingress_ctl_service_account: "{{ nginx_ingress_ctl_name }}-service-account"
+nginx_ingress_ctl_service_account: "{{ nginx_ingress_ctl_name }}"
 nginx_ingress_ctl_image: "nginx/nginx-ingress:{{ nginx_ingress_ctl_version }}"
 nginx_ingress_ctl_ingress_class: "{{ nginx_ingress_ctl_name }}"
 

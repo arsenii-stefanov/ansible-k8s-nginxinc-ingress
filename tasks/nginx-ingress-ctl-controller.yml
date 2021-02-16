@@ -1,10 +1,10 @@
 ---
 
 - name: KUBE NGINX INGRESS CONTROLLER TASK | Apply Service Configs
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     definition: "{{ lookup('template', item) }}"
     state: present
@@ -21,10 +21,10 @@
   when: nginx_ingress_ctl_service_configs is defined and nginx_ingress_ctl_service_configs != ""
 
 - name: KUBE NGINX INGRESS CONTROLLER TASK | Get a List of All Services
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     kind: Pod
     label_selectors:
@@ -38,10 +38,10 @@
   when: service_list is defined
 
 - name: KUBE NGINX INGRESS CONTROLLER TASK | Apply Deployment Configs
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     definition: "{{ lookup('template', item) }}"
     state: present
@@ -51,10 +51,10 @@
   when: nginx_ingress_ctl_deployment_configs is defined and nginx_ingress_ctl_deployment_configs != ""
 
 - name: KUBE NGINX INGRESS CONTROLLER TASK | Get a List of All Pods
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     kind: Pod
     label_selectors:
