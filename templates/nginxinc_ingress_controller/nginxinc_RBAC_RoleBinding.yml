@@ -1,9 +1,10 @@
+### REFERENCE: https://github.com/nginxinc/kubernetes-ingress/tree/master/deployments/rbac
 {% if nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally == true %}
 kind: ClusterRoleBinding
 {% else %}
 kind: RoleBinding
 {% endif %}
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ nginx_ingress_ctl_name }}
 {% if ( nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally != true ) or ( nginx_ingress_ctl_deploy_globally is not defined ) %}
@@ -11,7 +12,7 @@ metadata:
 {% endif %}
 subjects:
 - kind: ServiceAccount
-  name: {{ nginx_ingress_ctl_service_account }}
+  name: {{ nginx_ingress_ctl_name }}
   namespace: {{ nginx_ingress_ctl_kube_namespace }}
 roleRef:
 {% if nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally == true %}

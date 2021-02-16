@@ -5,6 +5,7 @@ References:
 
 * Official GitHub repo: https://github.com/nginxinc/kubernetes-ingress
 
+<<<<<<< HEAD
 * Official DockerHub repo: https://hub.docker.com/r/nginx/nginx-ingress/
 
 
@@ -105,3 +106,6 @@ nginx_ingress_vhost_config:
     - ip: "34.86.101.28"
       comment: "Load Balancer"
 ```
+=======
+* Oficcial DockerHub repo: https://hub.docker.com/r/nginx/nginx-ingress/
+>>>>>>> 4e1127ede599c9e06dbebbf17932faabd0869ab1

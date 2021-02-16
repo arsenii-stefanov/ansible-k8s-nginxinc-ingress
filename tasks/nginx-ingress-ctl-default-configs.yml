@@ -1,10 +1,10 @@
 ---
 
 - name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply System Configs
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     definition: "{{ lookup('template', item) | from_yaml }}"
     state: present
@@ -12,32 +12,54 @@
       fail_on_error: yes
   register: system_cofigs_output
   with_items: "{{ nginx_ingress_ctl_system_configs }}"
-  when: nginx_ingress_ctl_system_configs is defined and nginx_ingress_ctl_system_configs != ""
+  when:
+    - nginx_ingress_ctl_system_configs is defined
+    - nginx_ingress_ctl_system_configs != ""
 
 - name: DEBUG
   debug:
     var: system_cofigs_output.results[{{ item }}].result
   with_sequence: start=0 end={{ nginx_ingress_ctl_system_configs | length - 1}}
-  when: nginx_ingress_ctl_system_configs is defined and nginx_ingress_ctl_system_configs != ""
+  when:
+    - nginx_ingress_ctl_system_configs is defined
+    - nginx_ingress_ctl_system_configs != ""
 
 - name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply Common Configs
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     definition: "{{ lookup('template', item) }}"
     state: present
-#        validate:
-#          fail_on_error: yes
+    validate:
+      fail_on_error: yes
   with_items: "{{ nginx_ingress_ctl_common_configs }}"
-  when: nginx_ingress_ctl_common_configs is defined and nginx_ingress_ctl_common_configs != ""
+  when:
+    - nginx_ingress_ctl_common_configs is defined
+    - nginx_ingress_ctl_common_configs != ""
+
+- name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply Custom Resource Definitions
+  community.kubernetes.k8s:
+    api_key: "{{ kube_auth_api_key }}"
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
+    host: "{{ kube_api_url }}"
+    definition: "{{ lookup('template', item) }}"
+    state: present
+### Validation disabled to aviod false positive syntax errors in Custom Resource Definitions
+#    validate:
+#      fail_on_error: yes
+  with_items: "{{ nginx_ingress_ctl_custom_resource_definitions }}"
+  when:
+    - nginx_ingress_ctl_enable_custom_resources is defined
+    - nginx_ingress_ctl_enable_custom_resources == True
 
 - name: KUBE NGINX INGRESS CONTROLLER DEFAULT TASK | Apply Secrets
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     definition: "{{ lookup('template', item) }}"
     state: present
@@ -45,4 +67,6 @@
       fail_on_error: yes
   no_log: true
   with_items: "{{ nginx_ingress_ctl_secrets }}"
-  when: nginx_ingress_ctl_secrets is defined and nginx_ingress_ctl_secrets != ""
+  when:
+    - nginx_ingress_ctl_secrets is defined
+    - nginx_ingress_ctl_secrets != ""

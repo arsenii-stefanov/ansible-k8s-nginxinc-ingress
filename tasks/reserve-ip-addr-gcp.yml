@@ -1,29 +1,47 @@
 ---
 
 - name: KUBE NGINX INGRESS CONTROLLER IP TASK | Check If the IP Address Exists
-  gcp_compute_address_info:
+  google.cloud.gcp_compute_address_info:
     region: "{{ nginx_ingress_ctl_ip_addr_config['region'] }}"
     filters:
     - name = {{ nginx_ingress_ctl_ip_addr_config['name'] }}
     project: "{{ nginx_ingress_ctl_ip_addr_config['project'] }}"
-    auth_kind: "{{ nginx_ingress_ctl_ip_addr_config['auth_kind'] | default('application') }}"
-  register: gcp_compute_addr_details
+    auth_kind: serviceaccount
+    service_account_contents: "{{ gcp_service_account_json_key }}"
+  register: ipaddr_info
+  tags: ["always"]
 
 - set_fact:
-    nginx_ingress_ctl_ip_addr: "{{ gcp_compute_addr_details.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
+    nginx_ingress_ctl_ip_addr: "{{ ipaddr_info.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
 
-- name: KUBE NGINX INGRESS CONTROLLER IP TASK | Create an IP for the LoadBalancer
-  gcp_compute_address:
+### NOT TESTED. BETTER RESERVER IP ADDRESSES WITH TERRAFORM
+- name: KUBE NGINX INGRESS CONTROLLER IP TASK | Create an IP for the LoadBalancer [Internal]
+  google.cloud.gcp_compute_address:
     name: "{{ nginx_ingress_ctl_ip_addr_config['name'] }}"
     region: "{{ nginx_ingress_ctl_ip_addr_config['region'] }}"
     project: "{{ nginx_ingress_ctl_ip_addr_config['project'] }}"
     auth_kind: "{{ nginx_ingress_ctl_ip_addr_config['auth_kind'] | default('application') }}"
+    #address_type: "{{ nginx_ingress_ctl_ip_addr_config['address_type'] }}"
+    address_type: "INTERNAL"
     state: present
   register: ip_addr_created
-  when: nginx_ingress_ctl_ip_addr == ""
+  when: nginx_ingress_ctl_ip_addr == "" and nginx_ingress_ctl_type == "internal"
+
+### NOT TESTED. BETTER RESERVER IP ADDRESSES WITH TERRAFORM
+- name: KUBE NGINX INGRESS CONTROLLER IP TASK | Create an IP for the LoadBalancer [External]
+  google.cloud.gcp_compute_address:
+    name: "{{ nginx_ingress_ctl_ip_addr_config['name'] }}"
+    region: "{{ nginx_ingress_ctl_ip_addr_config['region'] }}"
+    project: "{{ nginx_ingress_ctl_ip_addr_config['project'] }}"
+    auth_kind: "{{ nginx_ingress_ctl_ip_addr_config['auth_kind'] | default('application') }}"
+    #address_type: "{{ nginx_ingress_ctl_ip_addr_config['address_type'] }}"
+    address_type: "EXTERNAL"
+    state: present
+  register: ip_addr_created
+  when: nginx_ingress_ctl_ip_addr == "" and nginx_ingress_ctl_type == "external"
 
 - set_fact:
-    nginx_ingress_ctl_ip_addr: "{{ gcp_compute_addr_details.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
+    nginx_ingress_ctl_ip_addr: "{{ ipaddr_info.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
   when: ip_addr_created.changed == true
 
 - debug:

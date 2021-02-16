@@ -1,9 +1,10 @@
+### REFERENCE: https://github.com/nginxinc/kubernetes-ingress/blob/master/deployments/rbac/rbac.yaml
 {% if nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally == true %}
 kind: ClusterRole
 {% else %}
 kind: Role
 {% endif %}
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ nginx_ingress_ctl_name }}
 {% if ( nginx_ingress_ctl_deploy_globally is defined and nginx_ingress_ctl_deploy_globally != true ) or ( nginx_ingress_ctl_deploy_globally is not defined ) %}
@@ -43,6 +44,7 @@ rules:
   - pods
   verbs:
   - list
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -50,8 +52,10 @@ rules:
   verbs:
   - create
   - patch
+  - list
 - apiGroups:
   - extensions
+  - networking.k8s.io
   resources:
   - ingresses
   verbs:
@@ -59,17 +63,44 @@ rules:
   - watch
   - get
 - apiGroups:
-  - "extensions"
+  - networking.k8s.io
   resources:
   - ingresses/status
   verbs:
   - update
 - apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingressclasses
+  verbs:
+  - get
+{% if nginx_ingress_ctl_enable_custom_resources is defined and nginx_ingress_ctl_enable_custom_resources == true %}
+- apiGroups:
   - k8s.nginx.org
   resources:
   - virtualservers
   - virtualserverroutes
+  - globalconfigurations
+  - transportservers
+  - policies
   verbs:
   - list
   - watch
   - get
+- apiGroups:
+  - k8s.nginx.org
+  resources:
+  - virtualservers/status
+  - virtualserverroutes/status
+  - policies/status
+  verbs:
+  - update
+- apiGroups:
+  - cis.f5.com
+  resources:
+  - ingresslinks
+  verbs:
+  - list
+  - watch
+  - get
+{% endif %}

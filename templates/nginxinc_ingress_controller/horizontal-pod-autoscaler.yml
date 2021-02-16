@@ -1,4 +1,4 @@
-apiVersion: autoscaling/v1
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   name: hpa-{{ nginx_ingress_ctl_name }}
@@ -7,7 +7,14 @@ spec:
   maxReplicas: {{ nginx_ingress_ctl_hpa_config['max_replicas'] }}
   minReplicas: {{ nginx_ingress_ctl_hpa_config['min_replicas'] }}
   scaleTargetRef:
-    apiVersion: extensions/v1beta2
+    apiVersion: apps/v1
     kind: Deployment
     name: {{ nginx_ingress_ctl_name }}
-  targetCPUUtilizationPercentage: {{ nginx_ingress_ctl_hpa_config['target_cpu_utilization_percentage'] }}
+  metrics:
+  - type: Resource
+    resource:
+      ### https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ nginx_ingress_ctl_hpa_config['target_cpu_utilization_percentage'] }}
