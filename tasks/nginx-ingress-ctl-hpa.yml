@@ -1,10 +1,10 @@
 ---
 
 - name: KUBE NGINX INGRESS CONTROLLER HPA TASK | Apply HPA Config
-  k8s:
+  community.kubernetes.k8s:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     state: present
     definition: "{{ lookup('template', '{{ nginx_ingress_ctl_hpa }}') }}"
@@ -13,10 +13,10 @@
   when: nginx_ingress_ctl_hpa is defined and nginx_ingress_ctl_hpa != ""
 
 - name: KUBE NGINX INGRESS CONTROLLER HPA TASK | Get a List of All HPAs
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_key: "{{ kube_auth_api_key }}"
-    ca_cert: "{{ kube_ca_path }}"
-    validate_certs: false
+    ca_cert: "{{ kube_ca_path | default(omit) }}"
+    validate_certs: "{{ kube_validate_certs }}"
     host: "{{ kube_api_url }}"
     kind: HorizontalPodAutoscaler
     namespace: "{{ nginx_ingress_ctl_kube_namespace }}"
