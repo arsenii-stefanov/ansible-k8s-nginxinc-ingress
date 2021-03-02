@@ -6,7 +6,7 @@ nginx_ingress_ctl_name: "nginx-ingress"
 nginx_ingress_ctl_version: "1.8.0"
 
 kube_api_url: "https://k8s.example.com"
-kube_auth_api_key: "{{ kube_secrets_api_key }}"
+kube_auth_api_key: ""
 kube_ca_base: ""
 kube_ca_path: "" # Example - kube_ca_path: "{{ playbook_dir}}/kube_ca.pem"
 
