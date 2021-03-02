@@ -26,6 +26,12 @@ data:
     {{ item }}
 {% endfor %}
 {% endif %}
+{% if nginx_ingress_stream_snippets is defined and nginx_ingress_stream_snippets != "" and nginx_ingress_stream_snippets != [] %}
+  stream-snippets: |
+{% for item in nginx_ingress_stream_snippets %}
+    {{ item }}
+{% endfor %}
+{% endif %}
 {% if nginx_ingress_ctl_global_extra_conf is defined and nginx_ingress_ctl_global_extra_conf != "" %}
 {{ nginx_ingress_ctl_global_extra_conf | to_nice_yaml(width=800) | indent(width=2, indentfirst=False) }}
 {% endif %}

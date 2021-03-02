@@ -12,3 +12,4 @@
       fail_on_error: "{{ item.fail_on_error | default(true) }}"
   no_log: "{{ item.no_log | default(omit) }}"
   with_items: "{{ nginx_ingress_ctl_ingress_vhost_configs }}"
+  tags: ["create-ingress-vhost"]

@@ -9,7 +9,6 @@
     auth_kind: serviceaccount
     service_account_contents: "{{ gcp_service_account_json_key }}"
   register: ipaddr_info
-  tags: ["always"]
 
 - set_fact:
     nginx_ingress_ctl_ip_addr: "{{ ipaddr_info.resources | selectattr('name', 'equalto', nginx_ingress_ctl_ip_addr_config['name']) | map(attribute='address') | join(',') }}"
