@@ -5,6 +5,7 @@
     content: "{{ kube_ca_base | b64decode }}"
     dest: "{{ kube_ca_path }}"
   when: kube_ca_path is defined and kube_ca_path != ""
+  tags: ["always"]
 
 - name: KUBE NGINX INGRESS CONTROLLER PRE TASKS | Ensure That the Namespace Exists 
   community.kubernetes.k8s:
@@ -16,3 +17,4 @@
     api_version: v1
     name: "{{ nginx_ingress_ctl_kube_namespace }}"
     state: present
+  tags: ["always"]
